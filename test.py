@@ -1,4 +1,4 @@
-#SSWFinalProject 
+#SSWFinalProject
 #!/usr/bin/env python3
 import sys
 
@@ -24,57 +24,153 @@ VALID_TAGS = {
 
 def parse_line(line):
     """
-    Given a raw line from a GEDCOM file (no trailing newline),
-    return a tuple: (level, tag, arguments).
+    Parse into level, tag, arguments
+    If there is an “@…@ tag” at level 0 (e.g. “0 @I1@ INDI”), 
+    it returns tag="INDI" and arguments="@I1@".
     """
-    tokens = line.split(" ")
-    level = tokens[0]
+    parts = line.strip().split()
+    if len(parts) < 2:
+        return None, None, None
 
-    if level == "0":
-        if len(tokens) >= 3 and tokens[2] in ("INDI", "FAM"):
-            tag = tokens[2]
-            arguments = tokens[1]
-        else:
-            tag = tokens[1]
-            arguments = " ".join(tokens[2:]) if len(tokens) > 2 else ""
+    level = parts[0]
+    # special case: “0 @X@ TAG”
+    if level == "0" and parts[1].startswith("@") and parts[1].endswith("@"):
+        arguments = parts[1]
+        tag = parts[2]
     else:
-        tag = tokens[1]
-        arguments = " ".join(tokens[2:]) if len(tokens) > 2 else ""
+        tag = parts[1]
+        arguments = " ".join(parts[2:]) if len(parts) > 2 else ""
+    return int(level), tag, arguments
 
-    return level, tag, arguments
-
-def is_valid_tag(level_str, tag):
-    """
-    Returns 'Y' if the given tag is in VALID_TAGS and the numeric
-    level matches one of the allowed levels for that tag; otherwise 'N'.
-    """
-    try:
-        lvl = int(level_str)
-    except ValueError:
+def is_valid_tag(level, tag):
+    #Returns "Y" if (tag, level) is valid per VALID_TAGS, else "N".
+    if tag not in VALID_TAGS:
         return "N"
-
-    allowed = VALID_TAGS.get(tag, [])
-    return "Y" if lvl in allowed else "N"
+    return "Y" if level in VALID_TAGS[tag] else "N"
 
 def main():
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <gedcom_file>")
+    if len(sys.argv) < 2:
+        print("Usage: python3 test.py <filename.ged>")
         sys.exit(1)
 
     gedcom_path = sys.argv[1]
+    #save parsed ind and fam
+    individuals = []  # list of dicts
+    families = []     # list of dicts
+
+    # Temporary references for “current”
+    current_ind = None
+    current_fam = None
+    expecting_date_for = None  # either "BIRT", "DEAT", "MARR", or "DIV"
+
     try:
-        with open(gedcom_path, "r", encoding="utf-8") as f:
-            for raw_line in f:
-                line = raw_line.rstrip("\n")
+        with open(gedcom_path, "r") as f:
+            for raw in f:
+                line = raw.strip()
                 if not line:
                     continue
 
+                # Print input 
                 print(f"-->{line}")
 
                 level, tag, arguments = parse_line(line)
+                if tag is None:
+                    continue
                 valid_flag = is_valid_tag(level, tag)
 
+                # Print parsed 
                 print(f"<-- {level}|{tag}|{valid_flag}|{arguments}")
+
+                # Build Ind.
+                if level == 0 and tag == "INDI":
+                    person_id = arguments 
+                    current_ind = {
+                        "id": person_id,
+                        "name": "",
+                        "sex": "",
+                        "birth": "",
+                        "death": "",
+                        "famc": "",   # family as child
+                        "fams": "",   # family as spouse
+                    }
+                    individuals.append(current_ind)
+                    current_fam = None
+                    expecting_date_for = None
+                    continue
+
+                if current_ind is not None and level == 1:
+                    # ind record fields
+                    if tag == "NAME":
+                        current_ind["name"] = arguments
+                    elif tag == "SEX":
+                        current_ind["sex"] = arguments
+                    elif tag == "FAMC":
+                        current_ind["famc"] = arguments
+                    elif tag == "FAMS":
+                        current_ind["fams"] = arguments
+                    elif tag in ("BIRT", "DEAT"):
+                        expecting_date_for = tag
+                    else:
+                        expecting_date_for = None
+                    continue
+
+                if current_ind is not None and level == 2 and tag == "DATE" and expecting_date_for:
+                    if expecting_date_for == "BIRT":
+                        current_ind["birth"] = arguments
+                    elif expecting_date_for == "DEAT":
+                        current_ind["death"] = arguments
+                    expecting_date_for = None
+                    continue
+
+                #Build families
+                if level == 0 and tag == "FAM":
+                    # Start a new family record
+                    fam_id = arguments  # e.g. "@F1@"
+                    current_fam = {
+                        "id": fam_id,
+                        "husband": "",
+                        "wife": "",
+                        "children": [],  # collect multiple children
+                        "married": "",
+                        "divorced": "",
+                    }
+                    families.append(current_fam)
+                    current_ind = None
+                    expecting_date_for = None
+                    continue
+
+                if current_fam is not None and level == 1:
+                    # Fmaily fields 
+                    if tag == "HUSB":
+                        current_fam["husband"] = arguments
+                    elif tag == "WIFE":
+                        current_fam["wife"] = arguments
+                    elif tag == "CHIL":
+                        current_fam["children"].append(arguments)
+                    elif tag in ("MARR", "DIV"):
+                        expecting_date_for = tag
+                    else:
+                        expecting_date_for = None
+                    continue
+
+                if current_fam is not None and level == 2 and tag == "DATE" and expecting_date_for:
+                    if expecting_date_for == "MARR":
+                        current_fam["married"] = arguments
+                    elif expecting_date_for == "DIV":
+                        current_fam["divorced"] = arguments
+                    expecting_date_for = None
+                    continue
+
+               
+        #print
+        print("\n=== Parsed Individuals ===")
+        for person in individuals:
+            print(person)
+
+        print("\n=== Parsed Families ===")
+        for fam in families:
+            print(fam)
+
     except FileNotFoundError:
         print(f"Error: File '{gedcom_path}' not found.")
         sys.exit(1)
