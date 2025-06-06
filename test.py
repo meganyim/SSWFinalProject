@@ -63,6 +63,13 @@ def main():
     current_fam = None
     expecting_date_for = None  # either "BIRT", "DEAT", "MARR", or "DIV"
 
+    #Set up pretty table modules and assign column titles for individual and family data sets
+    from prettytable import PrettyTable
+    INDV_Table = PrettyTable()
+    INDV_Table.field_names = ["ID", "Name", "Gender", "Birthday", "Age", "Alive", "Death", "Child", "Spouse"]
+    FAM_Table = PrettyTable()
+    FAM_Table.field_names = ["ID", "Married", "Divorced", "Husband ID", "Husband Name", "Wife ID", "Wife Name", "Children"]
+
     try:
         with open(gedcom_path, "r") as f:
             for raw in f:
@@ -71,7 +78,7 @@ def main():
                     continue
 
                 # Print input 
-                print(f"-->{line}")
+                #print(f"-->{line}")
 
                 level, tag, arguments = parse_line(line)
                 if tag is None:
@@ -79,7 +86,7 @@ def main():
                 valid_flag = is_valid_tag(level, tag)
 
                 # Print parsed 
-                print(f"<-- {level}|{tag}|{valid_flag}|{arguments}")
+                #print(f"<-- {level}|{tag}|{valid_flag}|{arguments}")
 
                 # Build Ind.
                 if level == 0 and tag == "INDI":
@@ -94,6 +101,7 @@ def main():
                         "fams": "",   # family as spouse
                     }
                     individuals.append(current_ind)
+                    INDV_Table.add_row([current_ind]) #create a new row of individual data in pretty table module
                     current_fam = None
                     expecting_date_for = None
                     continue
@@ -135,6 +143,7 @@ def main():
                         "divorced": "",
                     }
                     families.append(current_fam)
+                    FAM_Table.add_row([current_fam]) #create a new row of family data in pretty table module
                     current_ind = None
                     expecting_date_for = None
                     continue
@@ -160,16 +169,19 @@ def main():
                         current_fam["divorced"] = arguments
                     expecting_date_for = None
                     continue
-
+      
+        #print tables
+        print(INDV_Table)
+        print(FAM_Table) 
                
         #print
-        print("\n=== Parsed Individuals ===")
-        for person in individuals:
-            print(person)
+        #print("\n=== Parsed Individuals ===")
+        #for person in individuals:
+            #print(person)
 
-        print("\n=== Parsed Families ===")
-        for fam in families:
-            print(fam)
+        #print("\n=== Parsed Families ===")
+        #for fam in families:
+            #print(fam)
 
     except FileNotFoundError:
         print(f"Error: File '{gedcom_path}' not found.")
