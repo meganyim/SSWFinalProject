@@ -78,7 +78,7 @@ def main():
                     continue
 
                 # Print input 
-                print(f"-->{line}")
+                #print(f"-->{line}")
 
                 level, tag, arguments = parse_line(line)
                 if tag is None:
@@ -86,7 +86,7 @@ def main():
                 valid_flag = is_valid_tag(level, tag)
 
                 # Print parsed 
-                print(f"<-- {level}|{tag}|{valid_flag}|{arguments}")
+                #print(f"<-- {level}|{tag}|{valid_flag}|{arguments}")
 
                 # Build Ind.
                 if level == 0 and tag == "INDI":
@@ -96,6 +96,7 @@ def main():
                         "name": "",
                         "sex": "",
                         "birth": "",
+                        "alive": "",
                         "death": "",
                         "famc": "",   # family as child
                         "fams": "",   # family as spouse
@@ -126,6 +127,7 @@ def main():
                         current_ind["birth"] = arguments
                     elif expecting_date_for == "DEAT":
                         current_ind["death"] = arguments
+                        current_ind["alive"] == 'N'
                     expecting_date_for = None
                     continue
 
@@ -169,14 +171,22 @@ def main():
                     continue
 
                
-        #print
-        print("\n=== Parsed Individuals ===")
+        #create tables and assign columns individual and family data
+        from prettytable import PrettyTable
+        INDV_Table = PrettyTable()
+        INDV_Table.field_names = ["ID", "Name", "Gender", "Birthday", "Alive", "Death", "Child", "Spouse"]
+        FAM_Table = PrettyTable()
+        FAM_Table.field_names = ["ID", "Husband ID", "Wife ID", "Children", "Married", "Divorced"]
+            
+        #print tables
         for person in individuals:
-            print(person)
-
-        print("\n=== Parsed Families ===")
+            INDV_Table.add_row(person) #create a new row of individual data in pretty table module
+       
         for fam in families:
-            print(fam)
+            FAM_Table.add_row(fam) #create a new row of family data in pretty table module
+       
+        print(INDV_Table)
+        print(FAM_Table) 
 
     except FileNotFoundError:
         print(f"Error: File '{gedcom_path}' not found.")
