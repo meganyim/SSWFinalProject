@@ -24,23 +24,30 @@ VALID_TAGS = {
 
 def parse_line(line):
     """
-    Parse into level, tag, arguments
-    If there is an “@…@ tag” at level 0 (e.g. “0 @I1@ INDI”), 
-    it returns tag="INDI" and arguments="@I1@".
+    Parse into (level:int, tag:str, arguments:str).
+    Handles both “0 @I1@ INDI” and “0 I1 INDI” syntaxes.
+    Returns (None, None, None) for blank/malformed lines.
     """
     parts = line.strip().split()
     if len(parts) < 2:
         return None, None, None
 
-    level = parts[0]
-    # special case: “0 @X@ TAG”
-    if level == "0" and parts[1].startswith("@") and parts[1].endswith("@"):
-        arguments = parts[1]
-        tag = parts[2]
-    else:
-        tag = parts[1]
-        arguments = " ".join(parts[2:]) if len(parts) > 2 else ""
-    return int(level), tag, arguments
+    # try to parse level
+    try:
+        level = int(parts[0])
+    except ValueError:
+        return None, None, None
+
+    # special case at level 0: either “@ID@ TAG” or “ID TAG”
+    if level == 0 and len(parts) >= 3 and parts[2] in ("INDI", "FAM"):
+        # parts[1] is the ID, parts[2] is the tag
+        return level, parts[2], parts[1]
+
+    # otherwise, normal <level> <tag> <arguments...>
+    tag = parts[1]
+    arguments = " ".join(parts[2:]) if len(parts) > 2 else ""
+    return level, tag, arguments
+
 
 def is_valid_tag(level, tag):
     #Returns "Y" if (tag, level) is valid per VALID_TAGS, else "N".
