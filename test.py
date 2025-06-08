@@ -224,20 +224,6 @@ def main():
 
         print(INDV_Table)
         print(FAM_Table) 
-
-        # print unique identifies and names of each by ids 
-        print("\nIndividuals (sorted by ID):")
-        for person in sorted(individuals, key=lambda x: x["id"]):
-            print(f"{person['id']}: {person['name']}")
-
-        # print unique indentifies and name of spouses in order by id
-        print("\nFamilies (sorted by ID):")
-        for fam in sorted(families, key=lambda x: x["id"]):
-            husb_id = fam["husband"]
-            wife_id = fam["wife"]
-            husb_name = id_to_name.get(husb_id, "")
-            wife_name = id_to_name.get(wife_id, "")
-            print(f"{fam['id']}: Husband → {husb_id} ({husb_name}), Wife → {wife_id} ({wife_name})")
     
     except FileNotFoundError:
         print(f"Error: File '{gedcom_path}' not found.")
