@@ -180,11 +180,26 @@ def main():
             
         #print tables
         for person in individuals:
-            INDV_Table.add_row(person) #create a new row of individual data in pretty table module
+            INDV_Table.add_row([
+                    person["id"],
+                    person["name"],
+                    person["sex"],
+                    person["birth"],
+                    "N" if person["death"] else "Y", #alive if no death
+                    person["death"],
+                    person["famc"],
+                    person["fams"]
+                ])
        
         for fam in families:
-            FAM_Table.add_row(fam) #create a new row of family data in pretty table module
-       
+            FAM_Table.add_row([
+        fam["id"],
+        fam["husband"],
+        fam["wife"],
+        ", ".join(fam["children"]),
+        fam["married"],
+        fam["divorced"]
+    ])
         print(INDV_Table)
         print(FAM_Table) 
 
