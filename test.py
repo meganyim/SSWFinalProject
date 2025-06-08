@@ -1,6 +1,8 @@
 #SSWFinalProject
 #!/usr/bin/env python3
 import sys
+from datetime import datetime
+
 
 VALID_TAGS = {
     "INDI": [0],
@@ -21,6 +23,13 @@ VALID_TAGS = {
     "DIV" : [1],
     "DATE": [2],
 }
+#date helper year-mon-day format all in numbers
+def reformat_date(date_str):
+    try:
+        dt = datetime.strptime(date_str, "%d %b %Y")
+        return dt.strftime("%Y-%m-%d")
+    except ValueError:
+        return date_str  # return unchanged if format doesn't match
 
 def parse_line(line):
     """
@@ -69,6 +78,8 @@ def main():
     current_ind = None
     current_fam = None
     expecting_date_for = None  # either "BIRT", "DEAT", "MARR", or "DIV"
+    #map ind id to name 
+    id_to_name = {}  
 
     try:
         with open(gedcom_path, "r") as f:
@@ -101,6 +112,7 @@ def main():
                         "famc": "",   # family as child
                         "fams": "",   # family as spouse
                     }
+                    id_to_name[person_id] = "" #initalize id
                     individuals.append(current_ind)
                     current_fam = None
                     expecting_date_for = None
@@ -110,12 +122,13 @@ def main():
                     # ind record fields
                     if tag == "NAME":
                         current_ind["name"] = arguments
+                        id_to_name[current_ind["id"]] = arguments
                     elif tag == "SEX":
-                        current_ind["sex"] = arguments
+                        current_ind["sex"] = {arguments}
                     elif tag == "FAMC":
-                        current_ind["famc"] = arguments
+                        current_ind["famc"] = {arguments}
                     elif tag == "FAMS":
-                        current_ind["fams"] = arguments
+                        current_ind["fams"] = {arguments}
                     elif tag in ("BIRT", "DEAT"):
                         expecting_date_for = tag
                     else:
@@ -123,13 +136,15 @@ def main():
                     continue
 
                 if current_ind is not None and level == 2 and tag == "DATE" and expecting_date_for:
+                    formatted_date = reformat_date(arguments)
                     if expecting_date_for == "BIRT":
-                        current_ind["birth"] = arguments
+                        current_ind["birth"] = formatted_date
                     elif expecting_date_for == "DEAT":
-                        current_ind["death"] = arguments
-                        current_ind["alive"] == 'N'
+                        current_ind["death"] = formatted_date
+                        current_ind["alive"] = 'N'
                     expecting_date_for = None
                     continue
+
 
                 #Build families
                 if level == 0 and tag == "FAM":
@@ -163,12 +178,15 @@ def main():
                     continue
 
                 if current_fam is not None and level == 2 and tag == "DATE" and expecting_date_for:
+                    formatted_date = reformat_date(arguments)
                     if expecting_date_for == "MARR":
-                        current_fam["married"] = arguments
+                        current_fam["married"] = formatted_date
                     elif expecting_date_for == "DIV":
-                        current_fam["divorced"] = arguments
+                        current_fam["divorced"] = formatted_date
                     expecting_date_for = None
                     continue
+
+
 
                
         #create tables and assign columns individual and family data
@@ -176,7 +194,7 @@ def main():
         INDV_Table = PrettyTable()
         INDV_Table.field_names = ["ID", "Name", "Gender", "Birthday", "Alive", "Death", "Child", "Spouse"]
         FAM_Table = PrettyTable()
-        FAM_Table.field_names = ["ID", "Husband ID", "Wife ID", "Children", "Married", "Divorced"]
+        FAM_Table.field_names = ["ID", "Husband ID", "Husband Name", "Wife ID", "Wife Name", "Children", "Married", "Divorced"]
             
         #print tables
         for person in individuals:
@@ -193,13 +211,17 @@ def main():
        
         for fam in families:
             FAM_Table.add_row([
-        fam["id"],
-        fam["husband"],
-        fam["wife"],
-        ", ".join(fam["children"]),
-        fam["married"],
-        fam["divorced"]
-    ])
+                    fam["id"],
+                    fam["husband"],
+                    id_to_name.get(fam["husband"], ""),
+                    fam["wife"],
+                    id_to_name.get(fam["wife"], ""),
+                    ", ".join(fam["children"]),
+                    fam["married"],
+                    fam["divorced"]
+                ])
+
+
         print(INDV_Table)
         print(FAM_Table) 
 
