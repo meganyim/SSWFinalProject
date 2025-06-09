@@ -187,8 +187,35 @@ def main():
                     continue
 
 
+        # US02: marriage must occur before divorce (and you can’t divorce if you never married)
+        for fam in families:
+            if fam["divorced"]:
+                if not fam["married"]:
+                    print(f"Error: Family {fam['id']} has divorce on {fam['divorced']} but no marriage date.")
+                else:
+                    # parse the two dates
+                    marr = datetime.strptime(fam["married"], "%Y-%m-%d")
+                    div  = datetime.strptime(fam["divorced"], "%Y-%m-%d")
+                    if div < marr:
+                        print(f"Error: Family {fam['id']} divorce ({fam['divorced']}) occurs before marriage ({fam['married']}).")
 
-               
+        # US03: marriage must occur before death of either spouse
+        for fam in families:
+            if fam["married"]:
+                marr = datetime.strptime(fam["married"], "%Y-%m-%d")
+                # check husband's death
+                husband = next((ind for ind in individuals if ind["id"] == fam["husband"]), None)
+                if husband and husband.get("death"):
+                    death_h = datetime.strptime(husband["death"], "%Y-%m-%d")
+                    if marr > death_h:
+                        print(f"Error: Family {fam['id']} marriage ({fam['married']}) occurs after husband's death ({husband['death']}).")
+                # check wife's death
+                wife = next((ind for ind in individuals if ind["id"] == fam["wife"]), None)
+                if wife and wife.get("death"):
+                    death_w = datetime.strptime(wife["death"], "%Y-%m-%d")
+                    if marr > death_w:
+                        print(f"Error: Family {fam['id']} marriage ({fam['married']}) occurs after wife's death ({wife['death']}).")
+                
         #create tables and assign columns individual and family data
         from prettytable import PrettyTable
         INDV_Table = PrettyTable()
