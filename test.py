@@ -31,6 +31,39 @@ def reformat_date(date_str):
     except ValueError:
         return date_str  # return unchanged if format doesn't match
 
+#check if correct number of days for each month
+def valid_date(date_str2):
+    dt2 = datetime.strptime(date_str2, "%d %b %Y")
+    #print(dt2)
+    month_number = dt2.month
+    day = dt2.day
+    #print(month_number)
+    year = dt2.year
+    thirty_one_days = [1,3,5,7,8,10,12]
+    thirty_days = [4,6,9,11]
+    return_val = True
+
+#determine whether dates from input data have correct number of days for that month
+    if month_number in thirty_one_days:
+        if day > 31 or day < 1:
+            return_val = False
+
+    elif month_number in thirty_days:
+        if day > 30 or day < 1:
+            return_val = False
+
+    elif month_number == 2:
+        if year%4 == 0:                 #leap year is every 4 years
+            if day > 29 or day < 1:
+                return_val = False
+        else:
+            if day > 28 or day < 1:
+                return_val = False
+    else:
+        return_val = False
+
+    return return_val
+
 def parse_line(line):
     """
     Parse into (level:int, tag:str, arguments:str).
@@ -137,6 +170,13 @@ def main():
 
                 if current_ind is not None and level == 2 and tag == "DATE" and expecting_date_for:
                     formatted_date = reformat_date(arguments)
+                    validated = valid_date(arguments)  #check to see if DATE is legitimate
+                    if not validated:
+                        print("Date Not Valid")
+                        #sys.exit(1)
+                    #else:
+                        #print("Dates are valid")
+                    
                     if expecting_date_for == "BIRT":
                         current_ind["birth"] = formatted_date
                     elif expecting_date_for == "DEAT":
@@ -179,6 +219,13 @@ def main():
 
                 if current_fam is not None and level == 2 and tag == "DATE" and expecting_date_for:
                     formatted_date = reformat_date(arguments)
+                    validated = valid_date(arguments)  #check to see if DATE is legitimate
+                    if not validated:
+                        print("Date Not Valid")
+                        #sys.exit(1)
+                    #else:
+                        #print("Dates are valid")
+                    
                     if expecting_date_for == "MARR":
                         current_fam["married"] = formatted_date
                     elif expecting_date_for == "DIV":
