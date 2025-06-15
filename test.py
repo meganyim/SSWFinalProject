@@ -234,7 +234,7 @@ def main():
                     continue
                     
                      
-        # US02: marriage must occur before divorce (and you can’t divorce if you never married)
+        # US04: marriage must occur before divorce (and you can’t divorce if you never married)
         for fam in families:
             if fam["divorced"]:
                 if not fam["married"]:
@@ -246,7 +246,7 @@ def main():
                     if div < marr:
                         print(f"Error: Family {fam['id']} divorce ({fam['divorced']}) occurs before marriage ({fam['married']}).")
 
-        # US03: marriage must occur before death of either spouse
+        # US05: marriage must occur before death of either spouse
         for fam in families:
             if fam["married"]:
                 marr = datetime.strptime(fam["married"], "%Y-%m-%d")
@@ -256,7 +256,9 @@ def main():
                     death_h = datetime.strptime(husband["death"], "%Y-%m-%d")
                     if marr > death_h:
                         print(f"Error: Family {fam['id']} marriage ({fam['married']}) occurs after husband's death ({husband['death']}).")
-                if husband and husband.get("sex"):    #US42 Husband should be male
+             
+                # US42: Check if Husband is male
+                if husband and husband.get("sex"):    
                     sex_h = husband["sex"]
                     if sex_h != {'M'}:
                         print(f"Wrong gender for role: Husband {fam['husband']} is {husband['sex']}")
@@ -267,7 +269,9 @@ def main():
                     death_w = datetime.strptime(wife["death"], "%Y-%m-%d")
                     if marr > death_w:
                         print(f"Error: Family {fam['id']} marriage ({fam['married']}) occurs after wife's death ({wife['death']}).")
-                if wife and wife.get("sex"):          #US42 Wife should be female
+            
+                # US42: Check if Wife is female
+                if wife and wife.get("sex"):          
                     sex_w = wife["sex"]
                     if sex_w != {'F'}:
                         print(f"Wrong gender for role: Wife {fam['wife']} is {wife['sex']}")
