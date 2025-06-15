@@ -31,7 +31,7 @@ def reformat_date(date_str):
     except ValueError:
         return date_str  # return unchanged if format doesn't match
 
-#check if correct number of days for each month
+#US42 check if correct number of days for each month
 def valid_date(date_str2):
     dt2 = datetime.strptime(date_str2, "%d %b %Y")
     #print(dt2)
@@ -172,7 +172,7 @@ def main():
                     formatted_date = reformat_date(arguments)
                     validated = valid_date(arguments)  #check to see if DATE is legitimate
                     if not validated:
-                        print("Date Not Valid")
+                        print("Date Not Valid: " + arguments)
                         #sys.exit(1)
                     #else:
                         #print("Dates are valid")
@@ -204,7 +204,7 @@ def main():
                     continue
 
                 if current_fam is not None and level == 1:
-                    # Fmaily fields 
+                    # Family fields 
                     if tag == "HUSB":
                         current_fam["husband"] = arguments
                     elif tag == "WIFE":
@@ -221,7 +221,7 @@ def main():
                     formatted_date = reformat_date(arguments)
                     validated = valid_date(arguments)  #check to see if DATE is legitimate
                     if not validated:
-                        print("Date Not Valid")
+                        print("Date Not Valid: " + arguments)
                         #sys.exit(1)
                     #else:
                         #print("Dates are valid")
@@ -232,9 +232,21 @@ def main():
                         current_fam["divorced"] = formatted_date
                     expecting_date_for = None
                     continue
+                    
+        #US21 Husband in family should be male and wife in family should be female
+        for fam in families:
+            husband = next((ind for ind in individuals if ind["id"] == fam["husband"]), None)           
+            if husband and husband.get("sex"):
+                sex_h = husband["sex"]
+                if sex_h != {'M'}:
+                    print(f"Wrong gender for role: Husband {fam['husband']} is {husband['sex']}")
 
-
-
+            wife = next((ind for ind in individuals if ind["id"] == fam["wife"]), None)        
+            if wife and wife.get("sex"):
+                sex_w = wife["sex"]
+                if sex_w != {'F'}:
+                    print(f"Wrong gender for role: Wife {fam['wife']} is {wife['sex']}")
+        
                
         #create tables and assign columns individual and family data
         from prettytable import PrettyTable
