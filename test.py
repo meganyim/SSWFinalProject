@@ -232,7 +232,9 @@ def main():
                         current_fam["divorced"] = formatted_date
                     expecting_date_for = None
                     continue
-                    
+       
+                
+
                      
         # US04: marriage must occur before divorce (and you can’t divorce if you never married)
         for fam in families:
@@ -309,7 +311,51 @@ def main():
                     fam["divorced"]
                 ])
 
+ # US02: Birth before marriage
+        divorce_errors = 0
+        for fam in families:
+            if fam["divorced"]:
+                divorce_errors += 1
 
+                if not fam["married"]:
+                    print(f"Error US02: Family {fam['id']} has divorce on {fam['divorced']} but no marriage date.")
+
+                else:
+                    marr = datetime.strptime(fam["married"], "%Y-%m-%d")
+                    div  = datetime.strptime(fam["divorced"], "%Y-%m-%d")
+
+                    if div < marr:
+                        print(f"Error US02: Family {fam['id']} divorce ({fam['divorced']}) occurs before marriage ({fam['married']}).")
+        
+        if divorce_errors == 0:
+            print("No US02 errors found.")
+            
+    # US03: Birth before death  
+        death_errors = 0
+        for fam in families:
+            if fam["married"]:
+                marr = datetime.strptime(fam["married"], "%Y-%m-%d")
+                husband = next((ind for ind in individuals if ind["id"] == fam["husband"]), None)
+
+                if husband and husband.get("death"):
+                    death_h = datetime.strptime(husband["death"], "%Y-%m-%d")
+
+                    if marr > death_h:
+                        print(f"Error US03: Family {fam['id']} marriage ({fam['married']}) occurs after husband's death ({husband['death']}).")
+                        death_errors += 1
+                        
+                wife = next((ind for ind in individuals if ind["id"] == fam["wife"]), None)
+
+                if wife and wife.get("death"):
+                    death_w = datetime.strptime(wife["death"], "%Y-%m-%d")
+
+                    if marr > death_w:
+                        print(f"Error US03: Family {fam['id']} marriage ({fam['married']}) occurs after wife's death ({wife['death']}).")
+                        death_errors += 1
+        
+        if death_errors == 0:
+            print("No US03 errors found.")
+        
         print(INDV_Table)
         print(FAM_Table) 
     
