@@ -278,6 +278,55 @@ def main():
                     if sex_w != {'F'}:
                         print(f"Wrong gender for role: Wife {fam['wife']} is {wife['sex']}")
 
+        # US01: Dates before current date
+        from datetime import date      # already imported earlier, but harmless
+
+        today = date.today()           # YYYY-MM-DD for comparison
+        today = date.today()
+
+        # individuals
+        for ind in individuals:
+            for field in ("birth", "death"):
+                if ind[field]:
+                    d = datetime.strptime(ind[field], "%Y-%m-%d").date()
+                    if d > today:
+                        print(f"Error US01: {field.title()} date ({ind[field]}) "
+                            f"of Individual {ind['id']} occurs in the future.")
+
+        # families
+        for fam in families:
+            for field in ("married", "divorced"):
+                if fam[field]:
+                    d = datetime.strptime(fam[field], "%Y-%m-%d").date()
+                    if d > today:
+                        print(f"Error US01: {field.title()} date ({fam[field]}) "
+                            f"of Family {fam['id']} occurs in the future.")
+
+        # US06: Divorce before death of either spouse
+        for fam in families:
+            if not fam["divorced"]:
+                continue                           # nothing to check
+
+            div_dt = datetime.strptime(fam["divorced"], "%Y-%m-%d")
+
+            husband = next((ind for ind in individuals
+                            if ind["id"] == fam["husband"]), None)
+            wife    = next((ind for ind in individuals
+                            if ind["id"] == fam["wife"]), None)
+
+            # Husband died first?
+            if husband and husband.get("death"):
+                death_h = datetime.strptime(husband["death"], "%Y-%m-%d")
+                if div_dt > death_h:
+                    print(f"Error US06: Divorce ({fam['divorced']}) in Family {fam['id']} "
+                        f"occurs after husband's death ({husband['death']}).")
+
+            # Wife died first?
+            if wife and wife.get("death"):
+                death_w = datetime.strptime(wife["death"], "%Y-%m-%d")
+                if div_dt > death_w:
+                    print(f"Error US06: Divorce ({fam['divorced']}) in Family {fam['id']} "
+                        f"occurs after wife's death ({wife['death']}).")
      
         #create tables and assign columns individual and family data
         from prettytable import PrettyTable
