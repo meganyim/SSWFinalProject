@@ -353,7 +353,7 @@ def main():
                         print(f"Error US03: Family {fam['id']} marriage ({fam['married']}) occurs after wife's death ({wife['death']}).")
                         death_errors += 1
         
-        if death_errors == 0:
+        if death_errors == 0: 
             print("No US03 errors found.")
         
         print(INDV_Table)
