@@ -6,31 +6,31 @@ Error US01: Birth date (2100-01-01) of Individual @I1@ occurs in the future.
 Error US01: Married date (2030-01-01) of Family @F1@ occurs in the future.
 Error US01: Divorced date (2032-01-01) of Family @F1@ occurs in the future.
 Error US06: Divorce (2010-01-01) in Family @F5@ occurs after husband's death (2008-01-01).
-Error US02: Family @F3@ divorce (2000-01-01) occurs before marriage (2005-01-01).
-Error US03: Family @F4@ marriage (2020-01-01) occurs after husband's death (2015-01-01).
-+-------+---------------------+--------+------------+-------+------------+-------+--------+
-|   ID  |         Name        | Gender |  Birthday  | Alive |   Death    | Child | Spouse |
-+-------+---------------------+--------+------------+-------+------------+-------+--------+
-|  @I1@ |    Logan /Future/   | {'M'}  | 2100-01-01 |   Y   |            |       |        |
-|  @I2@ |   Ethan /Forward/   | {'M'}  | 1990-01-01 |   Y   |            |       |        |
-|  @I3@ |   Olivia /Forward/  | {'F'}  | 1992-01-01 |   Y   |            |       |        |
-|  @I4@ |   Chloe /Timewarp/  | {'F'}  | 2000-01-01 |   Y   |            |       |        |
-|  @I5@ |   Henry /Reverse/   | {'M'}  | 2000-01-01 |   N   | 1990-01-01 |       |        |
-|  @I6@ |    Robert /Gone/    | {'M'}  | 1980-01-01 |   N   | 2015-01-01 |       |        |
-|  @I7@ |  Julia /GenderErr/  | {'F'}  | 1985-01-01 |   Y   |            |       |        |
-|  @I8@ | Matthew /GenderErr/ | {'M'}  | 1986-01-01 |   Y   |            |       |        |
-|  @I9@ |  Patrick /Divorce/  | {'M'}  | 1980-01-01 |   N   | 2008-01-01 |       |        |
-| @I10@ |   Emily /Divorce/   | {'F'}  | 1982-01-01 |   Y   |            |       |        |
-| @I11@ |  Sophia /EarlyDiv/  | {'F'}  | 1983-01-01 |   Y   |            |       |        |
-| @I12@ |    Grace /Widow/    | {'F'}  | 1985-01-01 |   Y   |            |       |        |
-+-------+---------------------+--------+------------+-------+------------+-------+--------+
-+------+------------+-------------------+---------+---------------------+----------+------------+------------+
-|  ID  | Husband ID |    Husband Name   | Wife ID |      Wife Name      | Children |  Married   |  Divorced  |
-+------+------------+-------------------+---------+---------------------+----------+------------+------------+
-| @F1@ |    @I2@    |  Ethan /Forward/  |   @I3@  |   Olivia /Forward/  |          | 2030-01-01 | 2032-01-01 |
-| @F2@ |    @I2@    |  Ethan /Forward/  |   @I4@  |   Chloe /Timewarp/  |          | 1995-01-01 |            |
-| @F3@ |    @I6@    |   Robert /Gone/   |  @I11@  |  Sophia /EarlyDiv/  |          | 2005-01-01 | 2000-01-01 |
-| @F4@ |    @I6@    |   Robert /Gone/   |  @I12@  |    Grace /Widow/    |          | 2020-01-01 |            |
-| @F5@ |    @I9@    | Patrick /Divorce/ |  @I10@  |   Emily /Divorce/   |          | 2000-01-01 | 2010-01-01 |
-| @F6@ |    @I7@    | Julia /GenderErr/ |   @I8@  | Matthew /GenderErr/ |          | 2010-01-01 |            |
-+------+------------+-------------------+---------+---------------------+----------+------------+------------+
+No US02 errors found. All births occur before marriages
+Error US03: Stacy /Choy/ (@I5@) birth after death
++-------+----------------+--------+------------+-------+------------+-------+--------+
+|   ID  |      Name      | Gender |  Birthday  | Alive |   Death    | Child | Spouse |
++-------+----------------+--------+------------+-------+------------+-------+--------+
+|  @I1@ |  Seeyu /Choy/  | {'M'}  | 2100-01-01 |   Y   |            |       |        |
+|  @I2@ | Stephen /Choy/ | {'M'}  | 1990-01-01 |   Y   |            |       |        |
+|  @I3@ |  Angela /Yim/  | {'F'}  | 1992-01-01 |   Y   |            |       |        |
+|  @I4@ | Nathan /Choy/  | {'F'}  | 1985-08-15 |   Y   |            |       |        |
+|  @I5@ |  Stacy /Choy/  | {'M'}  | 2000-01-01 |   N   | 1990-01-01 |       |        |
+|  @I6@ |  Megan /Yim/   | {'M'}  | 1980-01-01 |   N   | 2015-01-01 |       |        |
+|  @I7@ |  Alison /Yim/  | {'F'}  | 1985-01-01 |   Y   |            |       |        |
+|  @I8@ | Annabel /Yim/  | {'M'}  | 1986-01-01 |   Y   |            |       |        |
+|  @I9@ | Patrick /Choy/ | {'M'}  | 1980-01-01 |   N   | 2008-01-01 |       |        |
+| @I10@ |  Emily /Choy/  | {'F'}  | 1982-01-01 |   Y   |            |       |        |
+| @I11@ |  Sophia /Yim/  | {'F'}  | 1983-02-28 |   Y   |            |       |        |
+| @I12@ |  Grace /Yim/   | {'F'}  | 1985-01-01 |   Y   |            |       |        |
++-------+----------------+--------+------------+-------+------------+-------+--------+
++------+------------+----------------+---------+---------------+----------+------------+------------+
+|  ID  | Husband ID |  Husband Name  | Wife ID |   Wife Name   | Children |  Married   |  Divorced  |
++------+------------+----------------+---------+---------------+----------+------------+------------+
+| @F1@ |    @I2@    | Stephen /Choy/ |   @I3@  |  Angela /Yim/ |          | 2030-01-01 | 2032-01-01 |
+| @F2@ |    @I2@    | Stephen /Choy/ |   @I4@  | Nathan /Choy/ |          | 1982-09-15 |            |
+| @F3@ |    @I6@    |  Megan /Yim/   |  @I11@  |  Sophia /Yim/ |          | 2005-01-01 | 2000-01-01 |
+| @F4@ |    @I6@    |  Megan /Yim/   |  @I12@  |  Grace /Yim/  |          | 2020-01-01 |            |
+| @F5@ |    @I9@    | Patrick /Choy/ |  @I10@  |  Emily /Choy/ |          | 2000-01-01 | 2010-01-01 |
+| @F6@ |    @I7@    |  Alison /Yim/  |   @I8@  | Annabel /Yim/ |          | 2010-01-01 |            |
++------+------------+----------------+---------+---------------+----------+------------+------------+

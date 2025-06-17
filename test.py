@@ -277,7 +277,6 @@ def main():
                     sex_w = wife["sex"]
                     if sex_w != {'F'}:
                         print(f"Wrong gender for role: Wife {fam['wife']} is {wife['sex']}")
-
         # US01: Dates before current date
         from datetime import date      # already imported earlier, but harmless
 
@@ -360,50 +359,32 @@ def main():
                     fam["divorced"]
                 ])
 
- # US02: Birth before marriage
-        divorce_errors = 0
-        for fam in families:
-            if fam["divorced"]:
-                divorce_errors += 1
+# US02: Birth before marriage
 
-                if not fam["married"]:
-                    print(f"Error US02: Family {fam['id']} has divorce on {fam['divorced']} but no marriage date.")
-
-                else:
-                    marr = datetime.strptime(fam["married"], "%Y-%m-%d")
-                    div  = datetime.strptime(fam["divorced"], "%Y-%m-%d")
-
-                    if div < marr:
-                        print(f"Error US02: Family {fam['id']} divorce ({fam['divorced']}) occurs before marriage ({fam['married']}).")
+        us02_errors = 0
+        for person in individuals:
+            if person["birth"] and person["fams"]:
+                fams_id = str(person["fams"]).strip("{}'")
+                for fam in families:
+                    if fam["id"] == fams_id and fam["married"]:
+                        if person["birth"] > fam["married"]:
+                            print(f"Error US02: {person['name']} ({person['id']}) birth after marriage")
+                            us02_errors += 1
         
-        if divorce_errors == 0:
-            print("No US02 errors found.")
-            
-    # US03: Birth before death  
-        death_errors = 0
-        for fam in families:
-            if fam["married"]:
-                marr = datetime.strptime(fam["married"], "%Y-%m-%d")
-                husband = next((ind for ind in individuals if ind["id"] == fam["husband"]), None)
+        if us02_errors == 0:
+            print("No US02 errors found. All births occur before marriages")
 
-                if husband and husband.get("death"):
-                    death_h = datetime.strptime(husband["death"], "%Y-%m-%d")
+# US03: Birth before death  
 
-                    if marr > death_h:
-                        print(f"Error US03: Family {fam['id']} marriage ({fam['married']}) occurs after husband's death ({husband['death']}).")
-                        death_errors += 1
-                        
-                wife = next((ind for ind in individuals if ind["id"] == fam["wife"]), None)
-
-                if wife and wife.get("death"):
-                    death_w = datetime.strptime(wife["death"], "%Y-%m-%d")
-
-                    if marr > death_w:
-                        print(f"Error US03: Family {fam['id']} marriage ({fam['married']}) occurs after wife's death ({wife['death']}).")
-                        death_errors += 1
+        us03_errors = 0
+        for person in individuals:
+            if person["birth"] and person["death"]:
+                if person["birth"] > person["death"]:
+                    print(f"Error US03: {person['name']} ({person['id']}) birth after death")
+                    us03_errors += 1
         
-        if death_errors == 0:
-            print("No US03 errors found.")
+        if us03_errors == 0:
+            print("No US03 errors found. All births occur before deaths")
         
         print(INDV_Table)
         print(FAM_Table) 
