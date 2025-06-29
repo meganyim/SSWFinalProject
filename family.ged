@@ -14,7 +14,7 @@
 1 NAME Stephen /Choy/
 1 SEX  M
 1 BIRT
-2 DATE  1 JAN 1990                        
+2 DATE  1 JAN 1860                        
 
 0 @I3@ INDI
 1 NAME Angela /Yim/
@@ -40,7 +40,7 @@
 1 NAME Megan /Yim/
 1 SEX  M
 1 BIRT
-2 DATE  1 JAN 1980
+2 DATE  1 JAN 1860
 1 DEAT
 2 DATE  1 JAN 2015                        
 
@@ -103,6 +103,22 @@
 2 DATE  1 JAN 2005
 1 DIV
 2 DATE  1 JAN 2000
+1 CHIL I7
+1 CHIL I8
+1 CHIL I13
+1 CHIL I14
+1 CHIL I15
+1 CHIL I16
+1 CHIL I17
+1 CHIL I18
+1 CHIL I19
+1 CHIL I20
+1 CHIL I21
+1 CHIL I22
+1 CHIL I23
+1 CHIL I24
+1 CHIL I25
+1 CHIL I26
 
 0 @F4@ FAM                                 
 1 HUSB @I6@
