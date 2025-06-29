@@ -1,7 +1,7 @@
 #SSWFinalProject
 #!/usr/bin/env python3
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 VALID_TAGS = {
@@ -248,6 +248,12 @@ def main():
                     if div < marr:
                         print(f"Error: Family {fam['id']} divorce ({fam['divorced']}) occurs before marriage ({fam['married']}).")
 
+       # US015: Familes must have fewer than 15 siblings    
+            sibs = len(fam["children"])
+            #print(sibs)
+            if sibs >= 15:
+                print(f"Error US15: Family {fam['id']} has {sibs} children")
+
         # US05: marriage must occur before death of either spouse
         for fam in families:
             if fam["married"]:
@@ -291,6 +297,32 @@ def main():
                     if d > today:
                         print(f"Error US01: {field.title()} date ({ind[field]}) "
                             f"of Individual {ind['id']} occurs in the future.")
+
+        # US07: Check if any indiviuals have lived 150 yrs or more
+        for ind in individuals:        
+                if ind["birth"] and not ind["death"]:
+                    birthday = datetime.strptime(ind['birth'], "%Y-%m-%d")
+                    #print(birthday)
+                    alive = datetime.today() - timedelta(days = 365.25*150)
+                    #print(alive)
+
+                    if birthday < alive:
+                        print(f"Error US07: {ind['id']} has lived 150 yrs or more")
+                    
+                    #elif birthday > alive:
+                        #print(f"Good US07: {ind['id']} has lived less than 150 yrs")
+
+                if ind["birth"] and ind["death"]:
+                    birthday = datetime.strptime(ind['birth'], "%Y-%m-%d")
+                    #print(birthday)
+                    deathday = datetime.strptime(ind['death'], "%Y-%m-%d")
+                    #print(deathday)
+                    
+                    if deathday - birthday >= timedelta(days = 365.25*150):
+                        print(f"Error US07: {ind['id']} lived 150 yrs or more")
+
+                    #if deathday - birthday < timedelta(days = 365.25*150):
+                        #print(f"Good US07: {ind['id']} did not lived 150 yrs or more")
 
         # families
         for fam in families:
