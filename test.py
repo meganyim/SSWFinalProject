@@ -248,6 +248,10 @@ def main():
                     if div < marr:
                         print(f"Error: Family {fam['id']} divorce ({fam['divorced']}) occurs before marriage ({fam['married']}).")
 
+
+
+
+    
        # US015: Familes must have fewer than 15 siblings    
             sibs = len(fam["children"])
             #print(sibs)
@@ -283,6 +287,8 @@ def main():
                     sex_w = wife["sex"]
                     if sex_w != {'F'}:
                         print(f"Wrong gender for role: Wife {fam['wife']} is {wife['sex']}")
+
+
         # US01: Dates before current date
         from datetime import date      # already imported earlier, but harmless
 
@@ -400,7 +406,7 @@ def main():
                 for fam in families:
                     if fam["id"] == fams_id and fam["married"]:
                         if person["birth"] > fam["married"]:
-                            print(f"Error US02: {person['name']} ({person['id']}) birth after marriage")
+                            print(f"US02 Error Detected: {person['name']} ({person['id']}) birth after marriage")
                             us02_errors += 1
         
         if us02_errors == 0:
@@ -412,11 +418,55 @@ def main():
         for person in individuals:
             if person["birth"] and person["death"]:
                 if person["birth"] > person["death"]:
-                    print(f"Error US03: {person['name']} ({person['id']}) birth after death")
+                    print(f"US03 Error Detected: {person['name']} ({person['id']}) birth after death")
                     us03_errors += 1
+
+
+        # US14: Multiple births <= 5
+        for fam in families:
+            if not fam["children"]:
+                continue
+            
+            birth_date_groups = {}
+            for child_id in fam["children"]:
+                child = next((ind for ind in individuals if ind["id"] == child_id), None)
+                if child and child["birth"]:
+                    birth_date = child["birth"]
+                    
+                    if birth_date not in birth_date_groups:
+                        birth_date_groups[birth_date] = []
+                    birth_date_groups[birth_date].append(child_id)
+            
+            for birth_date, children_on_date in birth_date_groups.items():
+                if len(children_on_date) > 5:
+                    print(f"US14 Error Detected: Family {fam['id']} has {len(children_on_date)} children born on {birth_date}")
+
+        # US22: Unique IDs
+        found_duplicate_individuals = False
+
+        for i in range(len(individuals)):
+            current_id = individuals[i]["id"]
+            
+            for j in range(i + 1, len(individuals)):
+                other_id = individuals[j]["id"]
+                
+                if current_id == other_id:
+                    print(f"US22 Error Detected: Duplicate individual ID {current_id}")
+                    found_duplicate_individuals = True
+                    
+        found_duplicate_families = False
+                        
+        for i in range(len(families)):
+            current_id = families[i]["id"]
+            
+            for j in range(i + 1, len(families)):
+                other_id = families[j]["id"]
+                
+                if current_id == other_id:
+                    print(f"US22 Error Detected: Duplicate family ID {current_id}")
+                    found_duplicate_families = True
         
-        if us03_errors == 0:
-            print("No US03 errors found. All births occur before deaths")
+
         
         print(INDV_Table)
         print(FAM_Table) 
