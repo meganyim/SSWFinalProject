@@ -91,15 +91,15 @@ def parse_line(line):
     return level, tag, arguments
 
 
-def _same_id(a, b):
-    """Return True if GEDCOM IDs match, ignoring surrounding @ symbols."""
-    return a.strip("@") == b.strip("@")  
-
 def is_valid_tag(level, tag):
     #Returns "Y" if (tag, level) is valid per VALID_TAGS, else "N".
     if tag not in VALID_TAGS:
         return "N"
     return "Y" if level in VALID_TAGS[tag] else "N"
+
+def _same_id(a, b):
+    """Return True if GEDCOM IDs match, ignoring surrounding @ symbols."""
+    return a.strip("@") == b.strip("@")
 
 def main():
     if len(sys.argv) < 2:
@@ -116,7 +116,7 @@ def main():
     current_fam = None
     expecting_date_for = None  # either "BIRT", "DEAT", "MARR", or "DIV"
     #map ind id to name 
-    id_to_name = {}
+    id_to_name = {}  
 
     try:
         with open(gedcom_path, "r") as f:
@@ -252,6 +252,10 @@ def main():
                     if div < marr:
                         print(f"Error: Family {fam['id']} divorce ({fam['divorced']}) occurs before marriage ({fam['married']}).")
 
+
+
+
+    
        # US015: Familes must have fewer than 15 siblings    
             sibs = len(fam["children"])
             #print(sibs)
@@ -287,6 +291,8 @@ def main():
                     sex_w = wife["sex"]
                     if sex_w != {'F'}:
                         print(f"Wrong gender for role: Wife {fam['wife']} is {wife['sex']}")
+
+
         # US01: Dates before current date
         from datetime import date      # already imported earlier, but harmless
 
@@ -336,6 +342,33 @@ def main():
                     if d > today:
                         print(f"Error US01: {field.title()} date ({fam[field]}) "
                             f"of Family {fam['id']} occurs in the future.")
+
+        # US06: Divorce before death of either spouse
+        for fam in families:
+            if not fam["divorced"]:
+                continue                           # nothing to check
+
+            div_dt = datetime.strptime(fam["divorced"], "%Y-%m-%d")
+
+            husband = next((ind for ind in individuals
+                            if ind["id"] == fam["husband"]), None)
+            wife    = next((ind for ind in individuals
+                            if ind["id"] == fam["wife"]), None)
+
+            # Husband died first?
+            if husband and husband.get("death"):
+                death_h = datetime.strptime(husband["death"], "%Y-%m-%d")
+                if div_dt > death_h:
+                    print(f"Error US06: Divorce ({fam['divorced']}) in Family {fam['id']} "
+                        f"occurs after husband's death ({husband['death']}).")
+
+            # Wife died first?
+            if wife and wife.get("death"):
+                death_w = datetime.strptime(wife["death"], "%Y-%m-%d")
+                if div_dt > death_w:
+                    print(f"Error US06: Divorce ({fam['divorced']}) in Family {fam['id']} "
+                        f"occurs after wife's death ({wife['death']}).")
+                    
         # 
         # US08 – Birth after parents’ marriage (and ≤ 9 months after divorce)
         # 
@@ -399,33 +432,7 @@ def main():
                 if dad_age_diff >= 80:
                     print(f"Error US12: Father ({dad['id']}) is "
                         f"{int(dad_age_diff)} years older than child {child_id} "
-                        f"(limit < 80).")        
-
-        # US06: Divorce before death of either spouse
-        for fam in families:
-            if not fam["divorced"]:
-                continue                           # nothing to check
-
-            div_dt = datetime.strptime(fam["divorced"], "%Y-%m-%d")
-
-            husband = next((ind for ind in individuals
-                            if ind["id"] == fam["husband"]), None)
-            wife    = next((ind for ind in individuals
-                            if ind["id"] == fam["wife"]), None)
-
-            # Husband died first?
-            if husband and husband.get("death"):
-                death_h = datetime.strptime(husband["death"], "%Y-%m-%d")
-                if div_dt > death_h:
-                    print(f"Error US06: Divorce ({fam['divorced']}) in Family {fam['id']} "
-                        f"occurs after husband's death ({husband['death']}).")
-
-            # Wife died first?
-            if wife and wife.get("death"):
-                death_w = datetime.strptime(wife["death"], "%Y-%m-%d")
-                if div_dt > death_w:
-                    print(f"Error US06: Divorce ({fam['divorced']}) in Family {fam['id']} "
-                        f"occurs after wife's death ({wife['death']}).")
+                        f"(limit < 80).")
      
         #create tables and assign columns individual and family data
         from prettytable import PrettyTable
@@ -468,7 +475,7 @@ def main():
                 for fam in families:
                     if fam["id"] == fams_id and fam["married"]:
                         if person["birth"] > fam["married"]:
-                            print(f"Error US02: {person['name']} ({person['id']}) birth after marriage")
+                            print(f"US02 Error Detected: {person['name']} ({person['id']}) birth after marriage")
                             us02_errors += 1
         
         if us02_errors == 0:
@@ -480,12 +487,110 @@ def main():
         for person in individuals:
             if person["birth"] and person["death"]:
                 if person["birth"] > person["death"]:
-                    print(f"Error US03: {person['name']} ({person['id']}) birth after death")
+                    print(f"US03 Error Detected: {person['name']} ({person['id']}) birth after death")
                     us03_errors += 1
+
+
+        # US14: Multiple births <= 5
+        for fam in families:
+            if not fam["children"]:
+                continue
+            
+            birth_date_groups = {}
+            for child_id in fam["children"]:
+                child = next((ind for ind in individuals if ind["id"] == child_id), None)
+                if child and child["birth"]:
+                    birth_date = child["birth"]
+                    
+                    if birth_date not in birth_date_groups:
+                        birth_date_groups[birth_date] = []
+                    birth_date_groups[birth_date].append(child_id)
+            
+            for birth_date, children_on_date in birth_date_groups.items():
+                if len(children_on_date) > 5:
+                    print(f"US14 Error Detected: Family {fam['id']} has {len(children_on_date)} children born on {birth_date}")
+
+        # US22: Unique IDs
+        found_duplicate_individuals = False
+
+        for i in range(len(individuals)):
+            current_id = individuals[i]["id"]
+            
+            for j in range(i + 1, len(individuals)):
+                other_id = individuals[j]["id"]
+                
+                if current_id == other_id:
+                    print(f"US22 Error Detected: Duplicate individual ID {current_id}")
+                    found_duplicate_individuals = True
+                    
+        found_duplicate_families = False
+                        
+        for i in range(len(families)):
+            current_id = families[i]["id"]
+            
+            for j in range(i + 1, len(families)):
+                other_id = families[j]["id"]
+                
+                if current_id == other_id:
+                    print(f"US22 Error Detected: Duplicate family ID {current_id}")
+                    found_duplicate_families = True
         
-        if us03_errors == 0:
-            print("No US03 errors found. All births occur before deaths")
-        
+        # US16: All male members of a family should have the same last name
+        for fam in families:
+            surname = None
+            male_ids = []
+
+            # Add husband to male list
+            if fam["husband"]:
+                male_ids.append(fam["husband"])
+
+            # Add male children
+            for child_id in fam["children"]:
+                child = next((ind for ind in individuals if ind["id"] == child_id), None)
+                if child and child.get("sex") == {'M'}:
+                    male_ids.append(child["id"])
+
+            # Check last names
+            for mid in male_ids:
+                name = id_to_name.get(mid, "")
+                if "/" in name:
+                    last = name.split("/")[1].strip()
+                    if surname is None:
+                        surname = last
+                    elif last != surname:
+                        print(f"Error US16: In Family {fam['id']}, male individual {mid} has inconsistent last name '{last}' (expected '{surname}')")
+
+                # US10: Marriage after 14
+        us10_errors = 0
+        for fam in families:
+            if not fam["married"]:
+                continue
+
+            marriage_date = datetime.strptime(fam["married"], "%Y-%m-%d")
+            
+            # Get husband and wife
+            husband = next((ind for ind in individuals if ind["id"] == fam["husband"]), None)
+            wife = next((ind for ind in individuals if ind["id"] == fam["wife"]), None)
+
+            # Check husband's age at marriage
+            if husband and husband.get("birth"):
+                birth_h = datetime.strptime(husband["birth"], "%Y-%m-%d")
+                age_h = (marriage_date - birth_h).days / 365.25
+                if age_h < 14:
+                    print(f"Error US10: Husband {husband['id']} was younger than 14 at marriage in Family {fam['id']}")
+                    us10_errors += 1
+
+            # Check wife's age at marriage
+            if wife and wife.get("birth"):
+                birth_w = datetime.strptime(wife["birth"], "%Y-%m-%d")
+                age_w = (marriage_date - birth_w).days / 365.25
+                if age_w < 14:
+                    print(f"Error US10: Wife {wife['id']} was younger than 14 at marriage in Family {fam['id']}")
+                    us10_errors += 1
+
+        if us10_errors == 0:
+            print("No US10 errors found. All marriages occurred when spouses were at least 14 years old.")
+
         print(INDV_Table)
         print(FAM_Table) 
     
@@ -494,4 +599,9 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) == 2:
+        main()  # run GEDCOM file normally
+    else:
+        import unittest
+        unittest.main(module='testus10_16', exit=False)
+
