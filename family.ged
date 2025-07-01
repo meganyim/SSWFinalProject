@@ -140,4 +140,54 @@
 1 MARR
 2 DATE  1 JAN 2010
 
+0 @I27@ INDI
+1 NAME Victor /Smith/
+1 SEX  M
+1 BIRT
+2 DATE  1 JAN 1970                        
+
+0 @I28@ INDI
+1 NAME Vivian /Jones/
+1 SEX  F
+1 BIRT
+2 DATE  1 JAN 1972                        
+
+0 @I29@ INDI
+1 NAME Charlie /Smith/
+1 SEX  M
+1 BIRT
+2 DATE  1 JAN 1990                        
+
+0 @F7@ FAM                                
+1 HUSB @I27@
+1 WIFE @I28@
+1 MARR
+2 DATE  1 JAN 2000
+1 CHIL I29
+
+0 @I30@ INDI
+1 NAME George /Oldman/
+1 SEX  M
+1 BIRT
+2 DATE  1 JAN 1900                        
+
+0 @I31@ INDI
+1 NAME Grace /Oldman/
+1 SEX  F
+1 BIRT
+2 DATE  1 JAN 1970                        
+
+0 @I32@ INDI
+1 NAME Henry /Oldman/
+1 SEX  M
+1 BIRT
+2 DATE  1 JAN 1985                        
+
+0 @F8@ FAM                                
+1 HUSB @I30@
+1 WIFE @I31@
+1 MARR
+2 DATE  1 JAN 1979
+1 CHIL I32
+
 0 TRLR
