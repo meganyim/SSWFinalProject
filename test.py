@@ -97,6 +97,10 @@ def is_valid_tag(level, tag):
         return "N"
     return "Y" if level in VALID_TAGS[tag] else "N"
 
+def _same_id(a, b):
+    """Return True if GEDCOM IDs match, ignoring surrounding @ symbols."""
+    return a.strip("@") == b.strip("@")
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: python3 test.py <filename.ged>")
@@ -364,6 +368,71 @@ def main():
                 if div_dt > death_w:
                     print(f"Error US06: Divorce ({fam['divorced']}) in Family {fam['id']} "
                         f"occurs after wife's death ({wife['death']}).")
+                    
+        # 
+        # US08 – Birth after parents’ marriage (and ≤ 9 months after divorce)
+        # 
+        for fam in families:
+            if not fam["children"]:
+                continue
+
+            marr_dt = datetime.strptime(fam["married"], "%Y-%m-%d") \
+                    if fam["married"] else None
+            div_dt  = datetime.strptime(fam["divorced"], "%Y-%m-%d") \
+                    if fam["divorced"] else None
+
+            for child_id in fam["children"]:
+                child = next((ind for ind in individuals
+                            if _same_id(ind["id"], child_id)), None)
+                if not child or not child["birth"]:
+                    continue
+                child_birth_dt = datetime.strptime(child["birth"], "%Y-%m-%d")
+
+                # Child born before marriage
+                if marr_dt and child_birth_dt < marr_dt:
+                    print(f"Error US08: Child {child_id} born {child['birth']} "
+                        f"before parents' marriage {fam['married']} "
+                        f"in family {fam['id']}.")
+
+                # Child born 9 months after divorce
+                if div_dt and child_birth_dt > div_dt + timedelta(days=270):
+                    print(f"Error US08: Child {child_id} born {child['birth']} "
+                        f"more than 9 months after parents' divorce "
+                        f"{fam['divorced']} in family {fam['id']}.")                       
+                
+        # 
+        # US12 – Parents not too old (mother < 60 yrs older, father < 80 yrs older)
+        # 
+        for fam in families:
+            mom = next((ind for ind in individuals
+                if _same_id(ind["id"], fam["wife"])), None)
+            dad = next((ind for ind in individuals
+                if _same_id(ind["id"], fam["husband"])), None)
+            if not mom or not dad or not mom["birth"] or not dad["birth"]:
+                continue  # missing parent birthdates
+
+            mom_birth_dt = datetime.strptime(mom["birth"], "%Y-%m-%d")
+            dad_birth_dt = datetime.strptime(dad["birth"], "%Y-%m-%d")
+
+            for child_id in fam["children"]:
+                child = next((ind for ind in individuals
+                            if _same_id(ind["id"], child_id)), None)
+                if not child or not child["birth"]:
+                    continue
+                child_birth_dt = datetime.strptime(child["birth"], "%Y-%m-%d")
+
+                # age differences in years
+                mom_age_diff = (child_birth_dt - mom_birth_dt).days / 365.25
+                dad_age_diff = (child_birth_dt - dad_birth_dt).days / 365.25
+
+                if mom_age_diff >= 60:
+                    print(f"Error US12: Mother ({mom['id']}) is "
+                        f"{int(mom_age_diff)} years older than child {child_id} "
+                        f"(limit < 60).")
+                if dad_age_diff >= 80:
+                    print(f"Error US12: Father ({dad['id']}) is "
+                        f"{int(dad_age_diff)} years older than child {child_id} "
+                        f"(limit < 80).")
      
         #create tables and assign columns individual and family data
         from prettytable import PrettyTable
