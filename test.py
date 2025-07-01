@@ -466,8 +466,62 @@ def main():
                     print(f"US22 Error Detected: Duplicate family ID {current_id}")
                     found_duplicate_families = True
         
+        # US16: All male members of a family should have the same last name
+        for fam in families:
+            surname = None
+            male_ids = []
 
-        
+            # Add husband to male list
+            if fam["husband"]:
+                male_ids.append(fam["husband"])
+
+            # Add male children
+            for child_id in fam["children"]:
+                child = next((ind for ind in individuals if ind["id"] == child_id), None)
+                if child and child.get("sex") == {'M'}:
+                    male_ids.append(child["id"])
+
+            # Check last names
+            for mid in male_ids:
+                name = id_to_name.get(mid, "")
+                if "/" in name:
+                    last = name.split("/")[1].strip()
+                    if surname is None:
+                        surname = last
+                    elif last != surname:
+                        print(f"Error US16: In Family {fam['id']}, male individual {mid} has inconsistent last name '{last}' (expected '{surname}')")
+
+                # US10: Marriage after 14
+        us10_errors = 0
+        for fam in families:
+            if not fam["married"]:
+                continue
+
+            marriage_date = datetime.strptime(fam["married"], "%Y-%m-%d")
+            
+            # Get husband and wife
+            husband = next((ind for ind in individuals if ind["id"] == fam["husband"]), None)
+            wife = next((ind for ind in individuals if ind["id"] == fam["wife"]), None)
+
+            # Check husband's age at marriage
+            if husband and husband.get("birth"):
+                birth_h = datetime.strptime(husband["birth"], "%Y-%m-%d")
+                age_h = (marriage_date - birth_h).days / 365.25
+                if age_h < 14:
+                    print(f"Error US10: Husband {husband['id']} was younger than 14 at marriage in Family {fam['id']}")
+                    us10_errors += 1
+
+            # Check wife's age at marriage
+            if wife and wife.get("birth"):
+                birth_w = datetime.strptime(wife["birth"], "%Y-%m-%d")
+                age_w = (marriage_date - birth_w).days / 365.25
+                if age_w < 14:
+                    print(f"Error US10: Wife {wife['id']} was younger than 14 at marriage in Family {fam['id']}")
+                    us10_errors += 1
+
+        if us10_errors == 0:
+            print("No US10 errors found. All marriages occurred when spouses were at least 14 years old.")
+
         print(INDV_Table)
         print(FAM_Table) 
     
