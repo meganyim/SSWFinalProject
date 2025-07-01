@@ -215,29 +215,4 @@
 1 CHIL @I34@
 1 CHIL @I35@
 
-0 @I46@ INDI
-1 NAME Victor /Smith/
-1 SEX  M
-1 BIRT
-2 DATE  1 JAN 1970                        
-
-0 @I47@ INDI
-1 NAME Vivian /Jones/
-1 SEX  F
-1 BIRT
-2 DATE  1 JAN 1972                        
-
-0 @I48@ INDI
-1 NAME Charlie /Smith/
-1 SEX  M
-1 BIRT
-2 DATE  1 JAN 1990                        
-
-0 @F11@ FAM                                
-1 HUSB @I46@
-1 WIFE @I47@
-1 MARR
-2 DATE  1 JAN 2000
-1 CHIL I48
-
 0 TRLR
