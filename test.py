@@ -530,4 +530,9 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) == 2:
+        main()  # run GEDCOM file normally
+    else:
+        import unittest
+        unittest.main(module='testus10_16', exit=False)
+
