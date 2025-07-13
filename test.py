@@ -291,7 +291,17 @@ def main():
                     sex_w = wife["sex"]
                     if sex_w != {'F'}:
                         print(f"Wrong gender for role: Wife {fam['wife']} is {wife['sex']}")
-
+                        
+                # US18: Check if siblings are married to each other
+                kids = fam['children']
+                husb = husband.get("id")
+                wife = wife.get("id")
+                famid = fam['id']
+                #print(kids)
+                #print(husband.get("id"))
+                #print(wife.get("id"))
+                if husb and wife in kids:
+                        print("Error US18: " + husb + " and " + wife +  " are both married and siblings in " + famid)
 
         # US01: Dates before current date
         from datetime import date      # already imported earlier, but harmless
