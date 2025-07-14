@@ -291,7 +291,7 @@ def main():
                     sex_w = wife["sex"]
                     if sex_w != {'F'}:
                         print(f"Wrong gender for role: Wife {fam['wife']} is {wife['sex']}")
-                        
+           
                 # US18: Check if siblings are married to each other
                 kids = fam['children']
                 husb = husband.get("id")
@@ -443,6 +443,72 @@ def main():
                     print(f"Error US12: Father ({dad['id']}) is "
                         f"{int(dad_age_diff)} years older than child {child_id} "
                         f"(limit < 80).")
+                    
+        
+        # Helper maps needed for US20 & US23
+        child_to_parents   = {}                 
+        parent_to_children = {}                  
+
+        for fam in families:
+            dad, mom = fam["husband"], fam["wife"]
+            for par in (dad, mom):
+                if par:                          
+                    parent_to_children.setdefault(par, set()).update(fam["children"])
+            for kid in fam["children"]:
+                child_to_parents[kid] = (dad, mom)
+
+        
+        # US23 No two INDIs may share BOTH name and birth date
+        seen_name_birth = {}     
+
+        for ind in individuals:
+            if ind["name"] and ind["birth"]:
+                key = (ind["name"].strip(), ind["birth"])
+                if key in seen_name_birth:
+                    first_id = seen_name_birth[key]
+                    print(f"Error US23: Individuals {first_id} and {ind['id']} have "
+                        f"identical name '{key[0]}' and birth-date {key[1]}.")
+                else:
+                    seen_name_birth[key] = ind["id"]
+
+        
+        # US20 Aunts/uncles cannot marry nieces/nephews
+        def is_aunt_uncle_of(person_id: str, potential_niece_nephew_id: str) -> bool:
+            
+            # Get siblings of the person
+            dad, mom = child_to_parents.get(person_id, (None, None))
+            if not (dad or mom):                          # person has no recorded parents
+                return False
+
+            sibs = set()
+            if dad:
+                sibs.update(parent_to_children.get(dad, set()))
+            if mom:
+                sibs.update(parent_to_children.get(mom, set()))
+            sibs.discard(person_id)
+
+            # For every sibling, collect their children
+            nieces_nephews = set()
+            for sib in sibs:
+                nieces_nephews.update(parent_to_children.get(sib, set()))
+
+            return potential_niece_nephew_id in nieces_nephews
+
+
+        for fam in families:
+            hus, wif, fam_id = fam["husband"], fam["wife"], fam["id"]
+            if not (hus and wif):
+                continue               # nothing to check
+
+            # Is husband an uncle of his spouse?
+            if is_aunt_uncle_of(hus, wif):
+                print(f"Error US20: Husband {hus} is an uncle of wife {wif} "
+                    f"in family {fam_id}.")
+
+            # Is wife an aunt of her spouse?
+            if is_aunt_uncle_of(wif, hus):
+                print(f"Error US20: Wife {wif} is an aunt of husband {hus} "
+                    f"in family {fam_id}.")
      
         #create tables and assign columns individual and family data
         from prettytable import PrettyTable
