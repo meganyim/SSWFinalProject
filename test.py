@@ -291,17 +291,7 @@ def main():
                     sex_w = wife["sex"]
                     if sex_w != {'F'}:
                         print(f"Wrong gender for role: Wife {fam['wife']} is {wife['sex']}")
-           
-                # US18: Check if siblings are married to each other
-                kids = fam['children']
-                husb = husband.get("id")
-                wife = wife.get("id")
-                famid = fam['id']
-                #print(kids)
-                #print(husband.get("id"))
-                #print(wife.get("id"))
-                if husb and wife in kids:
-                        print("Error US18: " + husb + " and " + wife +  " are both married and siblings in " + famid)
+    
 
         # US01: Dates before current date
         from datetime import date      # already imported earlier, but harmless
@@ -566,6 +556,31 @@ def main():
                     print(f"US03 Error Detected: {person['name']} ({person['id']}) birth after death")
                     us03_errors += 1
 
+# US17 & US18: Parents cannot marry their children, siblings cannot marry each other
+        #relate each individual to their children and siblings
+        parent_to_children = {}
+        sibling_group = {}
+        for fam in families:
+            children = fam.get('children', [])
+            for parent in [fam.get('husband'), fam.get('wife')]:
+                if parent:
+                    parent_to_children.setdefault(parent, set()).update(children)
+            
+            for child in children:
+                sibling_group[child] = set(children) - {child}
+
+        #check for parent/child and sibling marriages
+        for fam in families:
+            husb = fam.get('husband')
+            wife = fam.get('wife')
+            if husb and wife:
+                if wife in parent_to_children.get(husb, set()):
+                    print("US17 Error " + husb + " is married to child " + wife)
+                if husb in parent_to_children.get(wife, set()):
+                    print("US17 Error " + wife + " is married to child " + husb)
+                
+                if husb in sibling_group.get(wife, set()) or wife in sibling_group.get(husb, set()):
+                    print("US18 Error: Husband " + husb + " and wife " + wife + " are siblings")
 
         # US14: Multiple births <= 5
         for fam in families:
