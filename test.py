@@ -342,6 +342,52 @@ def main():
                     if d > today:
                         print(f"Error US01: {field.title()} date ({fam[field]}) "
                             f"of Family {fam['id']} occurs in the future.")
+                        
+
+        # US11: No bigamy - Marriage should not occur during marriage to another spouse
+        for ind in individuals:
+            marriages = []
+            for fam in families:
+                if fam["husband"] == ind["id"] or fam["wife"] == ind["id"]:
+                    if fam["married"]:
+                        marriages.append(fam)
+
+            for i, fam1 in enumerate(marriages):
+                for fam2 in marriages[i+1:]:
+                    marr1 = datetime.strptime(fam1["married"], "%Y-%m-%d")
+                    marr2 = datetime.strptime(fam2["married"], "%Y-%m-%d")
+                    end1 = None
+                    end2 = None
+                    
+                    if fam1["divorced"]:
+                        end1 = datetime.strptime(fam1["divorced"], "%Y-%m-%d")
+                    elif ind["death"]:
+                        end1 = datetime.strptime(ind["death"], "%Y-%m-%d")
+                        
+                    if fam2["divorced"]:
+                        end2 = datetime.strptime(fam2["divorced"], "%Y-%m-%d")
+                    elif ind["death"]:
+                        end2 = datetime.strptime(ind["death"], "%Y-%m-%d")
+                    
+                    if end1 is None or end2 is None or marr1 < end2 and marr2 < end1:
+                        print(f"Error US11: Individual {ind['id']} has bigamous marriage between families {fam1['id']} and {fam2['id']}")
+
+        # US25: Unique first names in families - No more than one child with same name and birth date
+        for fam in families:
+            if not fam["children"]:
+                continue
+            
+            name_birth_pairs = {}
+            for child_id in fam["children"]:
+                child = next((ind for ind in individuals if ind["id"] == child_id), None)
+                if child and child["name"] and child["birth"]:
+                    first_name = child["name"].split("/")[0].strip()
+                    key = (first_name, child["birth"])
+                    
+                    if key in name_birth_pairs:
+                        print(f"Error US25: Family {fam['id']} has multiple children with same first name '{first_name}' and birth date {child['birth']}: {name_birth_pairs[key]} and {child_id}")
+                    else:
+                        name_birth_pairs[key] = child_id
 
         # US06: Divorce before death of either spouse
         for fam in families:
