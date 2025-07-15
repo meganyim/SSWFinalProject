@@ -728,6 +728,75 @@ def main():
         if us10_errors == 0:
             print("No US10 errors found. All marriages occurred when spouses were at least 14 years old.")
 
+        # US24 – Unique families by spouses and marriage date
+        seen_family_combinations = set()
+
+        for fam in families:
+            hus_name = id_to_name.get(fam["husband"], "")
+            wife_name = id_to_name.get(fam["wife"], "")
+            marriage_date = fam.get("married", "")
+
+            key = (hus_name, wife_name, marriage_date)
+            if key in seen_family_combinations:
+                print(f"Error US24: Duplicate family with husband '{hus_name}', wife '{wife_name}', and marriage date {marriage_date}")
+            else:
+                seen_family_combinations.add(key)
+        # US26 – Corresponding entries between individual and family records
+        for ind in individuals:
+            # Check individual->family
+            if ind["fams"]:
+                fam_id = str(ind["fams"]).strip("{}'")
+                fam = next((f for f in families if f["id"] == fam_id), None)
+                if fam and ind["id"] not in (fam["husband"], fam["wife"]):
+                    print(f"Error US26: Individual {ind['id']} listed as spouse of family {fam_id}, but not found in family record.")
+
+            if ind["famc"]:
+                fam_id = str(ind["famc"]).strip("{}'")
+                fam = next((f for f in families if f["id"] == fam_id), None)
+                if fam and ind["id"] not in fam["children"]:
+                    print(f"Error US26: Individual {ind['id']} listed as child of family {fam_id}, but not found in family record.")
+
+        for fam in families:
+            # Check family->individual
+            for role in ("husband", "wife"):
+                person_id = fam.get(role)
+                if person_id:
+                    person = next((ind for ind in individuals if ind["id"] == person_id), None)
+                    if person and str(fam["id"]) not in str(person.get("fams", "")):
+                        print(f"Error US26: Family {fam['id']} lists {role} {person_id}, but not found in individual's FAMS field.")
+
+            for child_id in fam.get("children", []):
+                child = next((ind for ind in individuals if ind["id"] == child_id), None)
+                if child and str(fam["id"]) not in str(child.get("famc", "")):
+                    print(f"Error US26: Family {fam['id']} lists child {child_id}, but not found in individual's FAMC field.")
+
+        # US29 – List all deceased individuals
+        print("US29: List of deceased individuals:")
+        for ind in individuals:
+            if ind.get("death"):
+                print(f"  {ind['id']}: {ind['name']} – Died on {ind['death']}")
+        # US33 – List orphans (both parents dead and child < 18)
+        print("US33: List of orphans (children <18 with both parents deceased):")
+        for fam in families:
+            husb = next((ind for ind in individuals if ind["id"] == fam["husband"]), None)
+            wife = next((ind for ind in individuals if ind["id"] == fam["wife"]), None)
+
+            if not husb or not wife:
+                continue
+
+            if not husb.get("death") or not wife.get("death"):
+                continue  # one or both parents alive
+
+            for child_id in fam.get("children", []):
+                child = next((ind for ind in individuals if ind["id"] == child_id), None)
+                if not child or not child.get("birth"):
+                    continue
+
+                birth_dt = datetime.strptime(child["birth"], "%Y-%m-%d")
+                age = (datetime.today() - birth_dt).days / 365.25
+                if age < 18:
+                    print(f"  Orphan: {child['id']} – {child['name']} (age {int(age)})")
+
         print(INDV_Table)
         print(FAM_Table) 
     
@@ -737,8 +806,18 @@ def main():
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
-        main()  # run GEDCOM file normally
+        main()  # Run GEDCOM parser normally
     else:
         import unittest
-        unittest.main(module='testus10_16', exit=False)
+        import testus10_16
+        import testus24_26_29_33
+
+        loader = unittest.TestLoader()
+        suite = unittest.TestSuite()
+
+        suite.addTests(loader.loadTestsFromModule(testus10_16))
+        suite.addTests(loader.loadTestsFromModule(testus24_26_29_33))
+
+        runner = unittest.TextTestRunner()
+        runner.run(suite)
 
