@@ -1,0 +1,79 @@
+venvmeganyim@mac SSWFinalProject % python3 test.py
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.068s
+
+OK
+venvmeganyim@mac SSWFinalProject % python3 test.py family.g
+ed
+Error: Family @F3@ divorce (2000-01-01) occurs before marriage (2005-01-01).
+Error US15: Family @F3@ has 16 children
+Error: Family @F4@ marriage (2020-01-01) occurs after husband's death (2015-01-01).
+Wrong gender for role: Husband @I7@ is {'F'}
+Wrong gender for role: Wife @I8@ is {'M'}
+Error US01: Birth date (2100-01-01) of Individual @I1@ occurs in the future.
+Error US01: Birth date (2026-01-01) of Individual @I29@ occurs in the future.
+Error US07: @I2@ has lived 150 yrs or more
+Error US07: @I6@ lived 150 yrs or more
+Error US01: Married date (2030-01-01) of Family @F1@ occurs in the future.
+Error US01: Divorced date (2032-01-01) of Family @F1@ occurs in the future.
+Error US06: Divorce (2020-01-01) in Family @F5@ occurs after husband's death (2008-01-01).
+Error US08: Child I7 born 2020-01-01 more than 9 months after parents' divorce 2000-01-01 in family @F3@.
+Error US08: Child I8 born 2020-01-01 more than 9 months after parents' divorce 2000-01-01 in family @F3@.
+Error US12: Father (@I2@) is 159 years older than child @I30@ (limit < 80).
+Error US12: Father (@I2@) is 159 years older than child @I31@ (limit < 80).
+Error US12: Father (@I2@) is 159 years older than child @I32@ (limit < 80).
+Error US12: Father (@I2@) is 159 years older than child @I33@ (limit < 80).
+Error US12: Father (@I2@) is 159 years older than child @I34@ (limit < 80).
+Error US12: Father (@I2@) is 159 years older than child @I35@ (limit < 80).
+No US02 errors found. All births occur before marriages
+US03 Error Detected: Stacy /Choy/ (@I5@) birth after death
+US14 Error Detected: Family @F8@ has 6 children born on 2020-01-01
+US22 Error Detected: Duplicate individual ID @I1@
+US22 Error Detected: Duplicate family ID @F1@
+Error US16: In Family @F8@, male individual @I30@ has inconsistent last name 'Test' (expected 'Choy')
+Error US16: In Family @F8@, male individual @I32@ has inconsistent last name 'Test' (expected 'Choy')
+Error US16: In Family @F8@, male individual @I34@ has inconsistent last name 'Test' (expected 'Choy')
+Error US10: Wife @I4@ was younger than 14 at marriage in Family @F2@
+Error US10: Wife @I12@ was younger than 14 at marriage in Family @F4@
+Error US10: Husband @I7@ was younger than 14 at marriage in Family @F6@
+Error US10: Wife @I8@ was younger than 14 at marriage in Family @F6@
+Error US10: Husband @I27@ was younger than 14 at marriage in Family @F1@
+Error US10: Wife @I28@ was younger than 14 at marriage in Family @F1@
++-------+----------------+--------+------------+-------+------------+-------+--------+
+|   ID  |      Name      | Gender |  Birthday  | Alive |   Death    | Child | Spouse |
++-------+----------------+--------+------------+-------+------------+-------+--------+
+|  @I1@ |  Seeyu /Choy/  | {'M'}  | 2100-01-01 |   Y   |            |       |        |
+|  @I2@ | Stephen /Choy/ | {'M'}  | 1860-01-01 |   Y   |            |       |        |
+|  @I3@ |  Angela /Yim/  | {'F'}  | 1992-01-01 |   Y   |            |       |        |
+|  @I4@ | Nathan /Choy/  | {'F'}  | 1985-08-15 |   Y   |            |       |        |
+|  @I5@ |  Stacy /Choy/  | {'M'}  | 2000-01-01 |   N   | 1990-01-01 |       |        |
+|  @I6@ |  Megan /Yim/   | {'M'}  | 1860-01-01 |   N   | 2015-01-01 |       |        |
+|  @I7@ |  Alison /Yim/  | {'F'}  | 2020-01-01 |   Y   |            |       |        |
+|  @I8@ | Annabel /Yim/  | {'M'}  | 2020-01-01 |   Y   |            |       |        |
+|  @I9@ | Patrick /Choy/ | {'M'}  | 1980-01-01 |   N   | 2008-01-01 |       |        |
+| @I10@ |  Emily /Choy/  | {'F'}  | 1982-01-01 |   Y   |            |       |        |
+|  @I1@ |  Sophia /Yim/  | {'F'}  | 2020-01-01 |   Y   |            |       |        |
+| @I12@ |  Grace /Yim/   | {'F'}  | 2020-01-01 |   Y   |            |       |        |
+| @I27@ |  Tom /Smith/   | {'M'}  | 2010-01-01 |   Y   |            |       |        |
+| @I28@ |   Anna /Lee/   | {'F'}  | 2010-01-01 |   Y   |            |       |        |
+| @I29@ |  Jake /Brown/  | {'M'}  | 2026-01-01 |   Y   |            |       |        |
+| @I30@ |  Twin1 /Test/  | {'M'}  | 2020-01-01 |   Y   |            |       |        |
+| @I31@ |  Twin2 /Test/  | {'F'}  | 2020-01-01 |   Y   |            |       |        |
+| @I32@ |  Twin3 /Test/  | {'M'}  | 2020-01-01 |   Y   |            |       |        |
+| @I33@ |  Twin4 /Test/  | {'F'}  | 2020-01-01 |   Y   |            |       |        |
+| @I34@ |  Twin5 /Test/  | {'M'}  | 2020-01-01 |   Y   |            |       |        |
+| @I35@ |  Twin6 /Test/  | {'F'}  | 2020-01-01 |   Y   |            |       |        |
++-------+----------------+--------+------------+-------+------------+-------+--------+
++------+------------+----------------+---------+---------------+------------------------------------------------------------------------------+------------+------------+
+|  ID  | Husband ID |  Husband Name  | Wife ID |   Wife Name   |                                   Children                                   |  Married   |  Divorced  |
++------+------------+----------------+---------+---------------+------------------------------------------------------------------------------+------------+------------+
+| @F1@ |    @I2@    | Stephen /Choy/ |   @I3@  |  Angela /Yim/ |                                                                              | 2030-01-01 | 2032-01-01 |
+| @F2@ |    @I2@    | Stephen /Choy/ |   @I4@  | Nathan /Choy/ |                                                                              | 1982-09-15 |            |
+| @F3@ |    @I6@    |  Megan /Yim/   |  @I11@  |               | I7, I8, I13, I14, I15, I16, I17, I18, I19, I20, I21, I22, I23, I24, I25, I26 | 2005-01-01 | 2000-01-01 |
+| @F4@ |    @I6@    |  Megan /Yim/   |  @I12@  |  Grace /Yim/  |                                                                              | 2020-01-01 |            |
+| @F5@ |    @I9@    | Patrick /Choy/ |  @I10@  |  Emily /Choy/ |                                                                              | 2000-01-01 | 2020-01-01 |
+| @F6@ |    @I7@    |  Alison /Yim/  |   @I8@  | Annabel /Yim/ |                                                                              | 2020-01-01 |            |
+| @F1@ |   @I27@    |  Tom /Smith/   |  @I28@  |   Anna /Lee/  |                                     I29                                      | 2022-01-01 |            |
+| @F8@ |    @I2@    | Stephen /Choy/ |   @I3@  |  Angela /Yim/ |                   @I30@, @I31@, @I32@, @I33@, @I34@, @I35@                   |            |            |
++------+------------+----------------+---------+---------------+------------------------------------------------------------------------------+------------+------------+
