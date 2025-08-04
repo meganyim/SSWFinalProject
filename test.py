@@ -479,8 +479,29 @@ def main():
                     print(f"Error US12: Father ({dad['id']}) is "
                         f"{int(dad_age_diff)} years older than child {child_id} "
                         f"(limit < 80).")
-                    
-        
+
+        from datetime import date
+        # Helper for US27 & US28
+        def compute_age(birth_ymd: str, death_ymd: str | None) -> str:
+            """Age in whole years (string). Blank if no birth date."""
+            if not birth_ymd:
+                return ""
+            start = datetime.strptime(birth_ymd, "%Y-%m-%d").date()
+            end = datetime.strptime(death_ymd, "%Y-%m-%d").date() if death_ymd else date.today()
+            return str(int((end - start).days // 365.2425))
+
+        # Build fast lookup for people by id
+        individuals_by_id = {ind["id"]: ind for ind in individuals}
+
+        # US28: order siblings by decreasing age (oldest → youngest)
+        for fam in families:
+            fam["children"].sort(
+                key=lambda cid: (
+                    individuals_by_id.get(cid, {}).get("birth") or "9999-99-99",
+                    cid
+                )
+            )
+
         # Helper maps needed for US20 & US23
         child_to_parents   = {}                 
         parent_to_children = {}                  
@@ -546,37 +567,41 @@ def main():
                 print(f"Error US20: Wife {wif} is an aunt of husband {hus} "
                     f"in family {fam_id}.")
      
-        #create tables and assign columns individual and family data
+        # create tables and assign columns individual and family data
         from prettytable import PrettyTable
         INDV_Table = PrettyTable()
-        INDV_Table.field_names = ["ID", "Name", "Gender", "Birthday", "Alive", "Death", "Child", "Spouse"]
+        INDV_Table.field_names = ["ID", "Name", "Gender", "Birthday", "Age", "Alive", "Death", "Child", "Spouse"]
+
         FAM_Table = PrettyTable()
         FAM_Table.field_names = ["ID", "Husband ID", "Husband Name", "Wife ID", "Wife Name", "Children", "Married", "Divorced"]
-            
-        #print tables
+
+        # print tables
         for person in individuals:
+            # requires: from datetime import date  (at top) and compute_age(...) defined
+            age = compute_age(person["birth"], person["death"] or None)
             INDV_Table.add_row([
-                    person["id"],
-                    person["name"],
-                    person["sex"],
-                    person["birth"],
-                    "N" if person["death"] else "Y", #alive if no death
-                    person["death"],
-                    person["famc"],
-                    person["fams"]
-                ])
-       
+                person["id"],
+                person["name"],
+                person["sex"],
+                person["birth"],
+                age,                                   # ← Age column inserted here
+                "N" if person["death"] else "Y",
+                person["death"],
+                person["famc"],
+                person["fams"]
+            ])
+
         for fam in families:
             FAM_Table.add_row([
-                    fam["id"],
-                    fam["husband"],
-                    id_to_name.get(fam["husband"], ""),
-                    fam["wife"],
-                    id_to_name.get(fam["wife"], ""),
-                    ", ".join(fam["children"]),
-                    fam["married"],
-                    fam["divorced"]
-                ])
+                fam["id"],
+                fam["husband"],
+                id_to_name.get(fam["husband"], ""),
+                fam["wife"],
+                id_to_name.get(fam["wife"], ""),
+                ", ".join(fam["children"]),            # already sorted by US28 earlier
+                fam["married"],
+                fam["divorced"]
+            ])
 
 # US02: Birth before marriage
 
