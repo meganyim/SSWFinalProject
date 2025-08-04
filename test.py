@@ -775,6 +775,27 @@ def main():
         for ind in individuals:
             if ind.get("death"):
                 print(f"  {ind['id']}: {ind['name']} – Died on {ind['death']}")
+        
+        # US30 – List all alive and married individuals
+        print("US30: List of alive and married individuals:")
+        for ind in individuals:
+            if not ind.get("death"):
+                if ind["fams"]:
+                    print(f"  {ind['id']}: {ind['name']}")
+
+        # US31 - List all alive and single individuals over 30 
+        print("US31: List of single individuals over 30")
+        for ind in individuals:
+            if ind["birth"] and not ind["death"]:
+                birthday = datetime.strptime(ind['birth'], "%Y-%m-%d")
+                #print(birthday)
+                alive = datetime.today() - timedelta(days = 365.25*30)
+                #print(alive)
+
+                if birthday < alive:
+                    if not ind["fams"]:
+                        print(f"  {ind['id']}: {ind['name']}")
+        
         # US33 – List orphans (both parents dead and child < 18)
         print("US33: List of orphans (children <18 with both parents deceased):")
         for fam in families:
