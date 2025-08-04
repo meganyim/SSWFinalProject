@@ -33,7 +33,10 @@ def reformat_date(date_str):
 
 #US42 check if correct number of days for each month
 def valid_date(date_str2):
-    dt2 = datetime.strptime(date_str2, "%d %b %Y")
+    try:
+        dt2 = datetime.strptime(date_str2, "%d %b %Y")
+    except ValueError:
+        return False
     #print(dt2)
     month_number = dt2.month
     day = dt2.day
@@ -107,6 +110,7 @@ def main():
         sys.exit(1)
 
     gedcom_path = sys.argv[1]
+    line_number = 0
     #save parsed ind and fam
     individuals = []  # list of dicts
     families = []     # list of dicts
@@ -121,6 +125,7 @@ def main():
     try:
         with open(gedcom_path, "r") as f:
             for raw in f:
+                line_number += 1
                 line = raw.strip()
                 if not line:
                     continue
@@ -174,18 +179,15 @@ def main():
 
                 if current_ind is not None and level == 2 and tag == "DATE" and expecting_date_for:
                     formatted_date = reformat_date(arguments)
-                    validated = valid_date(arguments)  #check to see if DATE is legitimate
+                    validated = valid_date(arguments)
                     if not validated:
-                        print("Date Not Valid: " + arguments)
-                        #sys.exit(1)
-                    #else:
-                        #print("Dates are valid")
-                    
-                    if expecting_date_for == "BIRT":
-                        current_ind["birth"] = formatted_date
-                    elif expecting_date_for == "DEAT":
-                        current_ind["death"] = formatted_date
-                        current_ind["alive"] = 'N'
+                        print(f"Date Not Valid: {arguments} (Line {line_number})")
+                    else:
+                        if expecting_date_for == "BIRT":
+                            current_ind["birth"] = formatted_date
+                        elif expecting_date_for == "DEAT":
+                            current_ind["death"] = formatted_date
+                            current_ind["alive"] = 'N'
                     expecting_date_for = None
                     continue
 
@@ -223,17 +225,14 @@ def main():
 
                 if current_fam is not None and level == 2 and tag == "DATE" and expecting_date_for:
                     formatted_date = reformat_date(arguments)
-                    validated = valid_date(arguments)  #check to see if DATE is legitimate
+                    validated = valid_date(arguments)
                     if not validated:
-                        print("Date Not Valid: " + arguments)
-                        #sys.exit(1)
-                    #else:
-                        #print("Dates are valid")
-                    
-                    if expecting_date_for == "MARR":
-                        current_fam["married"] = formatted_date
-                    elif expecting_date_for == "DIV":
-                        current_fam["divorced"] = formatted_date
+                        print(f"Date Not Valid: {arguments} (Line {line_number})")
+                    else:
+                        if expecting_date_for == "MARR":
+                            current_fam["married"] = formatted_date
+                        elif expecting_date_for == "DIV":
+                            current_fam["divorced"] = formatted_date
                     expecting_date_for = None
                     continue
        
@@ -842,6 +841,34 @@ def main():
                 age = (datetime.today() - birth_dt).days / 365.25
                 if age < 18:
                     print(f"  Orphan: {child['id']} – {child['name']} (age {int(age)})")
+
+        #US34 - List of couples married when older spouse was more than twice the age of younger spouse
+        
+        print("US34 - List of couples married when older spouse was more than twice the age of younger spouse:")
+
+        for fam in families:
+            if not fam["married"]:
+                continue
+            
+            marriage_date = datetime.strptime(fam["married"], "%Y-%m-%d")
+            
+            husband = next((ind for ind in individuals if ind["id"] == fam["husband"]), None)
+            wife = next((ind for ind in individuals if ind["id"] == fam["wife"]), None)
+            
+            if husband and wife and husband.get("birth") and wife.get("birth"):
+                husband_birth = datetime.strptime(husband["birth"], "%Y-%m-%d")
+                wife_birth = datetime.strptime(wife["birth"], "%Y-%m-%d")
+                
+                husband_age_at_marriage = (marriage_date - husband_birth).days / 365.25
+                wife_age_at_marriage = (marriage_date - wife_birth).days / 365.25
+                
+                older_age = max(husband_age_at_marriage, wife_age_at_marriage)
+                younger_age = min(husband_age_at_marriage, wife_age_at_marriage)
+                
+                if older_age > 2 * younger_age:
+                    older_spouse = husband["name"] if husband_age_at_marriage > wife_age_at_marriage else wife["name"]
+                    younger_spouse = wife["name"] if husband_age_at_marriage > wife_age_at_marriage else husband["name"]
+                    print(f"  Family {fam['id']}: {older_spouse} (age {int(older_age)}) married {younger_spouse} (age {int(younger_age)}) on {fam['married']}")
 
         print(INDV_Table)
         print(FAM_Table) 
